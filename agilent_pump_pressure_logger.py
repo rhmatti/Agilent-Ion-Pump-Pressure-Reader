@@ -6,12 +6,8 @@ import serial.tools.list_ports
 print('Available ports:')
 print([comport.device for comport in serial.tools.list_ports.comports()])
 
-port = 'COM5'
-STX = b'\x02'
-ADDR = b'\x80'
-WIN = b'812'
-COM = b'\x30'
-ETX = b'\x03'
+port = 'COM5'           #Serial port of the pump controller
+sample_rate = 60        #How often the pressure is sampled (in seconds)
 
 #Attempts to establish a serial connection to the specified port
 def establishConnection(port):
@@ -23,14 +19,22 @@ def establishConnection(port):
 
 #Creates the necessary binary packet to ask the pump controller for the pressure reading
 def makepacket():
+    STX = b'\x02'
+    ADDR = b'\x80'
+    WIN = b'812'
+    COM = b'\x30'
+    ETX = b'\x03'
+
     payload = ADDR + WIN + COM
     payload += ETX
+
     CRC = payload[0]
     for b in payload[1:]:
         CRC ^= b
     CRC = hex(CRC)[2:].upper().zfill(2).encode()
+
     packet = STX + payload + CRC
-    #print('sending:', getbytes(packet))
+
     return packet
 
 #Queries the Agilent Ion Pump controller for the current pressure reading
@@ -78,7 +82,7 @@ def logPressures(sample_time):
 
 ser = establishConnection(port)
 #message = STX+ADDR+WIN+COM+ETX+CRC+b'\r\n'
-logPressures(1)
+logPressures(sample_rate)
     
 
 
